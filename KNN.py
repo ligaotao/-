@@ -39,3 +39,28 @@ def classify0(inX, dataSet, labels, k):
 group, labels = createDataSet()
 
 print(classify0((0, 0), group, labels, 3))
+
+
+## 将数据转换成分页器接受的格式
+
+def file2matrix(filename):
+    # 读取文件
+    fs = open(filename)
+    # 将文件内容分成为每一行的列表
+    arrayOLines = fs.readlines()
+    # 计算出行数
+    numberOfLines = len(arrayOLines)
+    # 创建一个 空的矩阵
+    returnMat = zeros((numberOfLines, 3))
+    classLabelVector = []
+    index = 0
+    # 通过循环 将数据形成 classify0 能接受的格式
+    for line in arrayOLines:
+        line = line.strip()
+        listFromLine = line.split('\t')
+        returnMat[index,:] = listFromLine[0:3]
+        classLabelVector.append(int(listFromLine[-1]))
+        index += 1
+    return returnMat,classLabelVector
+
+print(file2matrix('data/datingTestSet2.txt'))
