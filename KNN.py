@@ -1,5 +1,7 @@
 from numpy import *
 import operator
+import matplotlib
+import matplotlib.pyplot as plt
 
 
 def createDataSet():
@@ -41,7 +43,7 @@ group, labels = createDataSet()
 print(classify0((0, 0), group, labels, 3))
 
 
-## 将数据转换成分页器接受的格式
+# 将数据转换成分页器接受的格式
 
 def file2matrix(filename):
     # 读取文件
@@ -51,6 +53,7 @@ def file2matrix(filename):
     # 计算出行数
     numberOfLines = len(arrayOLines)
     # 创建一个 空的矩阵
+
     returnMat = zeros((numberOfLines, 3))
     classLabelVector = []
     index = 0
@@ -58,9 +61,62 @@ def file2matrix(filename):
     for line in arrayOLines:
         line = line.strip()
         listFromLine = line.split('\t')
-        returnMat[index,:] = listFromLine[0:3]
+        # 第 index 行
+        returnMat[index, :] = listFromLine[0:3]
         classLabelVector.append(int(listFromLine[-1]))
         index += 1
-    return returnMat,classLabelVector
+    return returnMat, classLabelVector
 
-print(file2matrix('data/datingTestSet2.txt'))
+
+# 数据归一化
+# 由于 飞行里程的数字偏大 将会影响到计算结果
+# 我们需要将它转换为 0-1以内的值
+# 转换公式 newValue = (oldValue - min) / max - min
+
+def autoNorm(dataSet):
+    print(dataSet)
+    minVals = dataSet.min(0)
+    maxVals = dataSet.max(0)
+    ranges = maxVals - minVals
+
+    normDataSet = zeros(shape(dataSet))
+    m = dataSet.shape[0]
+    normDataSet = dataSet - tile(minVals, (m, 1))
+    print(normDataSet)
+    normDataSet = normDataSet / tile(ranges, (m, 1))
+
+    return normDataSet, ranges, minVals
+
+
+# 测试算法
+
+def datingClassTest():
+    hoRatio = 0.1
+    datingDataMat, datingLabels = file2matrix('data/datingTestSet2.txt')
+    normDataSet, ranges, minVals = autoNorm(datingDataMat)
+    m = normDataSet.shape[0]
+
+    numTestVecs = int(m * hoRatio)
+    errorCount = 0.0
+
+    for i in range(numTestVecs):
+        # 当前的值  样本的多少 对应样本的归类 
+        classifierResult = classify0(normDataSet[i, :], normDataSet[numTestVecs:m, :],
+                                     datingLabels[numTestVecs: m], 3)
+        print("the classifier came back with: %d, the real answer is: %d" %
+              (classifierResult, datingLabels[i]))
+        if classifierResult != datingLabels[i]:
+            errorCount += 1.0
+    rage = errorCount / float(numTestVecs)
+    print("错误率: %f" % (rage))
+
+
+datingClassTest()
+
+# datingDataMat,datingLabels = file2matrix('data/datingTestSet2.txt')
+
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# # 输出第二列和第三列
+# ax.scatter(datingDataMat[:,1], datingDataMat[:,2], 15.0 * array(datingLabels), 15.0 * array(datingLabels))
+# plt.show()
